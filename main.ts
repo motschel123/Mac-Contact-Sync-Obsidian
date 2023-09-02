@@ -1,4 +1,4 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, normalizePath } from 'obsidian';
+import { App, Notice, Plugin, PluginSettingTab, Setting, normalizePath } from 'obsidian';
 
 interface ContactsPluginSettings {
 	contactsFolder: string;
