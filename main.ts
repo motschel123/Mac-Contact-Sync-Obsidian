@@ -1,7 +1,4 @@
-import { error } from 'console';
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, normalizePath } from 'obsidian';
-
-// Remember to rename these classes and interfaces!
+import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, normalizePath } from 'obsidian';
 
 interface ContactsPluginSettings {
 	contactsFolder: string;
@@ -82,15 +79,6 @@ export default class ContactsPlugin extends Plugin {
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
 	onunload() {
@@ -104,25 +92,6 @@ export default class ContactsPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-}
-
-class LoadedContactsModal extends Modal {
-	text: string;
-
-	constructor(app: App, text: string) {
-		super(app);
-		this.text = text;
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText(this.text);
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
 	}
 }
 
