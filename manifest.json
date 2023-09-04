@@ -3,7 +3,7 @@
 	"name": "Sync Contacts on macOS",
 	"version": "1.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Syncs your contacts from macOS to your Obsidian Vault.",
+	"description": "Sync your contacts from macOS to your Obsidian Vault.",
 	"author": "Marcel Schöckel",
 	"authorUrl": "https://twitter.com/marcelschoeckel",
 	"fundingUrl": "https://www.buymeacoffee.com/motschel",
