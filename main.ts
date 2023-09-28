@@ -37,6 +37,8 @@ export default class ContactsPlugin extends Plugin {
 				if (await this.app.vault.adapter.exists(normalizePath(this.settings.contactsFolder)) == false)
 					await this.app.vault.createFolder(this.settings.contactsFolder);
 
+				new Notice("Syncing contacts in progress...");
+
 				// Load contacts from MacOS "Contacts"
 				let markdownResults = await new LoadContactsLogic(this.settings).loadContacts();
 
