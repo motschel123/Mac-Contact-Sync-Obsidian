@@ -28,7 +28,7 @@ export default class ContactsPlugin extends Plugin {
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
 			id: 'sync-contacts',
-			name: 'Syncs contacts',
+			name: 'Sync contacts',
 			callback: async () =>  {
 				// Find/Create contacts folder
 				if (await this.app.vault.adapter.exists(normalizePath(this.settings.contactsFolder)) == false)
@@ -93,10 +93,6 @@ export default class ContactsPlugin extends Plugin {
 		this.addSettingTab(new SettingTab(this.app, this));
 	}
 
-	onunload() {
-
-	}
-
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
@@ -120,7 +116,7 @@ class SettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Contacts Folder')
+			.setName('Contacts folder')
 			.setDesc('Select the folder in which your contacts will stored')
 			.addText(text => text
 				.setPlaceholder('contacts')
@@ -153,8 +149,8 @@ class LoadContactsLogic {
 	}
 
 	async loadContacts(): Promise<Map<string, string>> {
-		let vcard_data = await this.get_vcards_string_from_applescript();
-  		let vcards = this.process_vcards_string(vcard_data);
+		let vcard_data = await this.getVCardsStringFromApplescript();
+  		let vcards = this.processVCardsString(vcard_data);
 		
 		let markdownMap = new Map<string, string>();
 
@@ -171,7 +167,7 @@ class LoadContactsLogic {
 		return markdownMap;
 	}
 
-	private get_vcards_string_from_applescript(): Promise<string> {
+	private getVCardsStringFromApplescript(): Promise<string> {
 		const group = this.settings.contactsGroup;
 		const APPLESCRIPT = `
 			set AppleScript's text item delimiters to ""
@@ -221,7 +217,7 @@ class LoadContactsLogic {
 		});
 	}
 	
-	private process_vcards_string(vcard_data: string): Array<VCard> {
+	private processVCardsString(vcard_data: string): Array<VCard> {
 		const vCard = require("vcard-parser");
 
 		const regex = /BEGIN:VCARD[\s\S]*?END:VCARD/g;
