@@ -1,4 +1,4 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting, TFile, normalizePath } from 'obsidian';
+import { App, Notice, Platform, Plugin, PluginSettingTab, Setting, TFile, normalizePath } from 'obsidian';
 const { spawn } = require('child_process');
 
 interface ContactsPluginSettings {
@@ -30,6 +30,9 @@ export default class ContactsPlugin extends Plugin {
 			id: 'sync-contacts',
 			name: 'Sync contacts',
 			callback: async () =>  {
+				if (!Platform.isMacOS) 
+					return new Notice("Error: This plugin only works on MacOS");
+
 				// Find/Create contacts folder
 				if (await this.app.vault.adapter.exists(normalizePath(this.settings.contactsFolder)) == false)
 					await this.app.vault.createFolder(this.settings.contactsFolder);
