@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-sample-plugin",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "Sync your contacts from macOS to your Obsidian Vault.",
 	"main": "main.js",
 	"scripts": {
@@ -22,6 +22,6 @@
 		"typescript": "4.7.4"
 	},
 	"dependencies": {
-		"vcard-parser": "^1.0.0"
+		"vcf": "^2.1.1"
 	}
 }
