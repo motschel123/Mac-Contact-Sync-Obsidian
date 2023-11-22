@@ -15,6 +15,7 @@ export default class VCardObject {
 	birthdate?: Date;
 	URLs?: Array<string>;
 	notes?: string;
+	xabuid?: string;
 
 	constructor(
 		card: typeof vCard
@@ -31,6 +32,7 @@ export default class VCardObject {
 		this.birthdate = this.parseBirthdate(card.get("bday"));
 		this.URLs = this.parseURLs(card.get("url"));
 		this.notes = this.parseNotes(card.get("note"));
+	    this.xabuid = this.parseNotes(card.get("xAbuid"));
 		//this.photo = card.get("photo")?.valueOf() ?? undefined;
 		
 		// Inform user of vCard without name
@@ -47,7 +49,7 @@ export default class VCardObject {
 	toMarkdown(enabledFields: string): string {
 		let markdown = '';
 		if (enabledFields.includes('fn')) {
-			markdown += `## 👤 ${this.fn}\n`;
+			markdown += `## 👤 ${this.fn}\n\n[Open in Contacts](addressbook://${this.xabuid?.replace(":","%3A")})\n\n`;
 		}
 		this.getVCardFields().forEach((field) => {
 			if (!enabledFields.includes(field)) return;
