@@ -40,13 +40,15 @@ export default class VCardObject {
 		}
 	}
 	
-	getFilename(): string {
-		return this.fn ?? "NO_NAME";
+	getFilename(fileNamePrefix: string): string {
+		return `${fileNamePrefix}${this.fn}` ?? "NO_NAME";
 	}
 
 	toMarkdown(enabledFields: string): string {
-		let markdown = `## 👤 ${this.fn}\n`;
-
+		let markdown = '';
+		if (enabledFields.includes('fn')) {
+			markdown += `## 👤 ${this.fn}\n`;
+		}
 		this.getVCardFields().forEach((field) => {
 			if (!enabledFields.includes(field)) return;
 
@@ -234,6 +236,6 @@ export default class VCardObject {
 
 	getVCardFields(): Array<string> {
 		return Object.getOwnPropertyNames(this)
-			.filter(prop => (prop !== 'constructor' && typeof (this as any)[prop] !== 'function') && prop !== 'version' && prop !== 'fn');
+			.filter(prop => (prop !== 'constructor' && typeof (this as any)[prop] !== 'function') && prop !== 'version');
 	}
 }
