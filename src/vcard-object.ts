@@ -32,7 +32,7 @@ export default class VCardObject {
 		this.birthdate = this.parseBirthdate(card.get("bday"));
 		this.URLs = this.parseURLs(card.get("url"));
 		this.notes = this.parseNotes(card.get("note"));
-	    this.xabuid = this.parseNotes(card.get("xAbuid"));
+	    this.xabuid = this.parseXAbuid(card.get("xAbuid"));
 		//this.photo = card.get("photo")?.valueOf() ?? undefined;
 		
 		// Inform user of vCard without name
@@ -168,6 +168,15 @@ export default class VCardObject {
 			notesString = notes.valueOf()?.split('\\n').map((line: string) => line.endsWith('\\') ? line.slice(0, line.length-2) : line).join('\n\t');
 		}
 		return notesString;
+	}
+
+	private parseXAbuid(xabuid: typeof vCard.Property): string | undefined {
+		let xabuidString: string | undefined = undefined;
+		
+		if (xabuid) {
+			xabuidString = xabuid.valueOf();
+		}
+		return xabuidString;
 	}
 
 	private parseEmails(email: typeof vCard.Property): Array<string> | undefined {
