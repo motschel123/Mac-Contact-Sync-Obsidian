@@ -49,8 +49,9 @@ export default class VCardObject {
 	toMarkdown(enabledFields: string): string {
 		let markdown = '';
 		if (enabledFields.includes('fn')) {
-			markdown += `## 👤 ${this.fn}\n\n[Open in Contacts](addressbook://${this.xabuid?.replace(":","%3A")})\n\n`;
+			markdown += `## 👤 ${this.fn}\n`;
 		}
+		markdown += `\n[Open in Contacts](addressbook://${this.xabuid?.replace(":","%3A")})\n\n`
 		this.getVCardFields().forEach((field) => {
 			if (!enabledFields.includes(field)) return;
 
