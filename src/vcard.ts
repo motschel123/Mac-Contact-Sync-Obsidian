@@ -20,7 +20,7 @@ export default class VCard {
 		card: typeof vcf
 	) {
 		this.version = card.version;
-		this.fn = card.get("fn")?.valueOf();
+		this.fn = card.get("fn")?.valueOf().replace(/\\,/g, ',');
 		
 		this.nickname = card.get("nickname")?.valueOf() ?? undefined;
 		this.organization = this.parseOrganization(card.get("org"));

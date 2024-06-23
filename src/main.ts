@@ -1,6 +1,7 @@
 import { App, Notice, Platform, Plugin, PluginSettingTab, Setting, TFile, TFolder, normalizePath } from 'obsidian';
 import VCard from './vcard';
 import { IContactsService, ContactsService } from './contactsService';
+import { ContentSeperator, FileService, IFileService } from './fileService';
 
 interface ContactsPluginSettings {
 	contactsGroup: string;
@@ -59,7 +60,6 @@ class SettingTab extends PluginSettingTab {
 					toggle.onChange(async (value) => {
 						this.plugin.settings.enabledContactFields = this.toggleEnabledField(attribute, value);
 						await this.plugin.saveSettings();
-						console.debug(this.plugin.settings.enabledContactFields)
 					});
 				});
 		}
@@ -99,76 +99,66 @@ export default class ContactsPlugin extends Plugin {
 			callback: async () =>  {
 				if (!Platform.isMacOS) 
 					return new Notice("Error: This plugin only works on MacOS");
-
-				// Find/Create contacts folder
-				if (await this.app.vault.adapter.exists(normalizePath(this.settings.contactsFolder)) == false)
-					await this.app.vault.createFolder(this.settings.contactsFolder);
-
+				
 				new Notice('Syncing...')
 				
-				const loadContactsLogic: IContactsService = new ContactsService(this.settings.contactsGroup, this.settings.enabledContactFields)
+				let loadContactsLogic: IContactsService = new ContactsService(this.settings.contactsGroup, this.settings.enabledContactFields)
+				let numContactsPromise = loadContactsLogic.getNumberOfContacts().then((numContacts) => {
+					new Notice(`Found ${numContacts} Contacts in group ${this.settings.contactsGroup}`)
+					return numContacts
+				})
 
-				let numberOfFoundContacts = await loadContactsLogic.getNumberOfContacts();
-				new Notice(`Found ${numberOfFoundContacts} Contacts in group ${this.settings.contactsGroup}`)
+				let fileService: IFileService = new FileService();
+				let createFolderPromise = fileService.createFolder(this.settings.contactsFolder, this.app)
 
-				// Load contacts from MacOS "Contacts"
+				let contentSeperator = new ContentSeperator(
+					this.settings.autogenerationStartTag, 
+					this.settings.autogenerationStartText, 
+					this.settings.autogenerationEndTag, 
+					this.settings.autogenerationEndText,
+				)
+
+				let [numContacts, _] = await Promise.all([numContactsPromise, createFolderPromise])
+
+				// Load contacts from MacOS "Contacts" and save to files
 				let markdownResults = await loadContactsLogic.loadContacts();
-				// Save all contacts into file
 				let successfulContacts = 0
 				let promises: Array<Promise<any>> = [];
 				for (let [filename, markdown] of markdownResults) {
-					// Setup File
-					let normPath = normalizePath(`${this.settings.contactsFolder}/${filename}.md`);
-					let contactFile = this.app.vault.getAbstractFileByPath(normPath);
-					let newContactInfo = `<!-- ${this.settings.autogenerationStartTag} ${this.settings.autogenerationStartText} --> \n${markdown} \n<!-- ${this.settings.autogenerationEndTag} ${this.settings.autogenerationEndText} -->`;
+					let filePath = normalizePath(`${this.settings.contactsFolder}/${filename}.md`);
+					let file = this.app.vault.getAbstractFileByPath(filePath);
 					
+					let newContactInfo = contentSeperator.buildContentString(markdown);
+
 					// contactFile is a folder 
-					if (contactFile instanceof TFolder) {
-						console.error(`Error: ${filename} is a folder`);
-						new Notice(`Error: ${filename} is a folder`);
+					if (file instanceof TFolder) {
+						console.error(`Error: ${filePath} is a folder`);
+						new Notice(`Error: ${filePath} is a folder`);
 					// contactFile doesn't exist yet
-					} else if (contactFile === null) {
+					} else if (file === null) {
 						promises.push(
-							this.app.vault.create(normPath, newContactInfo)
-							.then((_) => successfulContacts++)
-							.catch((error) => console.error(`Error syncing ${filename}\n${error}`))
+							fileService.saveFile(filePath, newContactInfo, this.app)
+								.then((_) => successfulContacts++)
+								.catch((error) => console.error(`Error syncing ${filename}\n${error}`))
 						);
 					// contactFile exists
-					} else if (contactFile instanceof TFile) {
+					} else if (file instanceof TFile) {
 						promises.push(
 							// extract the old contact info and replace it with the new data
-							this.app.vault.process(contactFile, (oldContent) => {
-								let lines = oldContent.split("\n");
-								
-								let startReplacementIndex = lines.findIndex((line) => line.startsWith("<!-- " + this.settings.autogenerationStartTag));
-								let endReplacementIndex = lines.findIndex((line) => line.startsWith("<!-- " + this.settings.autogenerationEndTag));
-
-								let newLines = Array<string>();
-
-								for (let i = Math.min(0, startReplacementIndex); i < lines.length; i++) {
-									if (i == startReplacementIndex) {
-										newLines.push(newContactInfo);
-									} else if (i >= startReplacementIndex && i <= endReplacementIndex) {
-										continue;
-									} else {
-										newLines.push(lines[i]);
-									}
-								}
-								return newLines.join("\n");							
-							})
+							fileService.updateFile(file, newContactInfo, new ContentSeperator(this.settings.autogenerationStartTag, this.settings.autogenerationStartText, this.settings.autogenerationEndTag, this.settings.autogenerationEndText), this.app)
 							.then((_) => successfulContacts++)
 							.catch((error) => console.error(`Error syncing ${filename}\n${error}`))
 						);
 					}
 				}
 
-				Promise.all(promises)
+				await Promise.all(promises)
 				.catch((error) => {
 					new Notice("Error syncing contacts!");
 					console.error(error);
 				}).finally(() => {
-					new Notice(`Successfully synced ${successfulContacts} of ${numberOfFoundContacts} Contacts`)
-					console.info(`Successfully synced ${successfulContacts} of ${numberOfFoundContacts} Contacts`)
+					new Notice(`Successfully synced ${successfulContacts} of ${numContacts} Contacts`)
+					console.info(`Successfully synced ${successfulContacts} of ${numContacts} Contacts`)
 				});
 			}
 		});
