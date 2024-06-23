@@ -1,6 +1,6 @@
 {
-	"name": "obsidian-sample-plugin",
-	"version": "1.0.3",
+	"name": "obsidian-sync-contacts-macos",
+	"version": "1.0.5",
 	"description": "Sync your contacts from macOS to your Obsidian Vault.",
 	"main": "main.js",
 	"scripts": {
@@ -11,7 +11,7 @@
 	},
 	"keywords": [],
 	"author": "",
-	"license": "GPL-3.0 license",
+	"license": "AGPL-3.0-only",
 	"devDependencies": {
 		"@types/jest": "^29.5.12",
 		"@types/node": "^16.11.6",
