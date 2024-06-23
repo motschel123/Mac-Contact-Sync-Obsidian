@@ -1,7 +1,6 @@
-import { Notice } from 'obsidian';
-const vCard = require('vcf');
+const vcf = require('vcf');
 
-export default class VCardObject {
+export default class VCard {
 	version: string;
 
 	fn?: string;
@@ -18,7 +17,7 @@ export default class VCardObject {
 	xabuid?: string;
 
 	constructor(
-		card: typeof vCard
+		card: typeof vcf
 	) {
 		this.version = card.version;
 		this.fn = card.get("fn")?.valueOf();
@@ -38,7 +37,7 @@ export default class VCardObject {
 		// Inform user of vCard without name
 		if (this.fn == undefined) {
 			console.debug(`Found vCard without name: \n ${JSON.stringify(this, null, 2)}`);
-			new Notice('Contact without name found. Check developer console for details.')
+			//new Notice('Contact without name found. Check developer console for details.')
 		}
 	}
 	
@@ -133,7 +132,7 @@ export default class VCardObject {
 		}
 	}
 
-	private parseBirthdate(bday: typeof vCard.Property): Date | undefined {
+	private parseBirthdate(bday: typeof vcf.Property): Date | undefined {
 		let birthdate: Date | undefined = undefined;
 		
 		if (bday) {
@@ -142,7 +141,7 @@ export default class VCardObject {
 		return birthdate;
 	}
 
-	private parseURLs(URLs: typeof vCard.Property): Array<string> | undefined {
+	private parseURLs(URLs: typeof vcf.Property): Array<string> | undefined {
 		let links: Array<string> | undefined = undefined;
 		
 		if (URLs) {
@@ -158,7 +157,7 @@ export default class VCardObject {
 		return links;
 	}
 
-	private parseNotes(notes: typeof vCard.Property): string | undefined {
+	private parseNotes(notes: typeof vcf.Property): string | undefined {
 		let notesString: string | undefined = undefined;
 		
 		if (notes) {
@@ -167,7 +166,7 @@ export default class VCardObject {
 		return notesString;
 	}
 
-	private parseXAbuid(xabuid: typeof vCard.Property): string | undefined {
+	private parseXAbuid(xabuid: typeof vcf.Property): string | undefined {
 		let xabuidString: string | undefined = undefined;
 		
 		if (xabuid) {
@@ -176,7 +175,7 @@ export default class VCardObject {
 		return xabuidString;
 	}
 
-	private parseEmails(email: typeof vCard.Property): Array<string> | undefined {
+	private parseEmails(email: typeof vcf.Property): Array<string> | undefined {
 		let emails: Array<string> | undefined = undefined;
 		
 		if (email) {
@@ -191,7 +190,7 @@ export default class VCardObject {
 		return emails;
 	}
 
-	private parseAddresses(adr: typeof vCard.Property): Array<[string, string]> | undefined {
+	private parseAddresses(adr: typeof vcf.Property): Array<[string, string]> | undefined {
 		let addresses: Array<[string, string]> | undefined = undefined;
 		
 		if (adr) {
@@ -211,7 +210,7 @@ export default class VCardObject {
 		return addresses;
 	}
 
-	private parseTelephones(tel: typeof vCard.Property): Array<[string, string]> | undefined {
+	private parseTelephones(tel: typeof vcf.Property): Array<[string, string]> | undefined {
 		let telephones: Array<[string, string]> | undefined = undefined;
 		
 		if (tel) {
@@ -227,7 +226,7 @@ export default class VCardObject {
 		return telephones;
 	}
 
-	private parseOrganization(org: typeof vCard.Property): string | undefined {
+	private parseOrganization(org: typeof vcf.Property): string | undefined {
 		let organization: string | undefined = undefined;
 		
 		if (org) {
@@ -238,7 +237,7 @@ export default class VCardObject {
 
 	static getVCardFields(): Array<string> {
 		const JSON_VCARD = ["vcard",[["version",{},"text","4.0"], ["fn",{},"text","name"]]];
-		const inst = new VCardObject(vCard.fromJSON(JSON_VCARD));
+		const inst = new VCard(vcf.fromJSON(JSON_VCARD));
 		return inst.getVCardFields();
 	}
 

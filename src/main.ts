@@ -1,10 +1,6 @@
 import { App, Notice, Platform, Plugin, PluginSettingTab, Setting, TFile, TFolder, normalizePath } from 'obsidian';
-import { type } from 'os';
-import { isFloat32Array } from 'util/types';
-import VCardObject from './vcard-object';
-const vCard = require('vcf');
-const { spawn } = require('child_process');
-
+import VCard from './vcard';
+import { IContactsService, ContactsService } from './contactsService';
 
 interface ContactsPluginSettings {
 	contactsGroup: string;
@@ -55,7 +51,7 @@ class SettingTab extends PluginSettingTab {
 			.setName('Configure the shown contact fields below')
 			.setDesc('To update the shown contact fields, re-sync your contacts')
 
-		for (let attribute of VCardObject.getVCardFields()) {
+		for (let attribute of VCard.getVCardFields()) {
 			new Setting(containerEl)
 				.setName(`${attribute}`)
 				.addToggle((toggle) => {
@@ -110,9 +106,9 @@ export default class ContactsPlugin extends Plugin {
 
 				new Notice('Syncing...')
 				
-				const loadContactsLogic = new LoadContactsLogic(this.settings)
+				const loadContactsLogic: IContactsService = new ContactsService(this.settings.contactsGroup, this.settings.enabledContactFields)
 
-				let numberOfFoundContacts = await loadContactsLogic.getNumberOfContactsInGroup();
+				let numberOfFoundContacts = await loadContactsLogic.getNumberOfContacts();
 				new Notice(`Found ${numberOfFoundContacts} Contacts in group ${this.settings.contactsGroup}`)
 
 				// Load contacts from MacOS "Contacts"
@@ -188,133 +184,5 @@ export default class ContactsPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-}
-
-class LoadContactsLogic {
-	constructor(
-		private settings: ContactsPluginSettings
-	) {
-		this.settings = settings;
-	}
-
-	async loadContacts(): Promise<Map<string, string>> {
-		let vCards: VCardObject[] = await this.getVCardStringsFromContactsApp();
-		// Filter out vCards without names
-		vCards = vCards.filter((vcard) => {
-			return vcard.fn != undefined;
-		});
-
-		const filenameToMarkdown = new Map<string, string>();
-		for (let vcard of vCards) {
-			filenameToMarkdown.set(vcard.getFilename(), vcard.toMarkdown(this.settings.enabledContactFields));
-		}
-		return filenameToMarkdown;
-	}
-
-	getNumberOfContactsInGroup(): Promise<number> {
-		const groupName = this.settings.contactsGroup;
-		const GROUP_NOT_DEFINED_ERROR = "GROUP NOT DEFINED";
-		
-
-		const JXA_SCRIPT = `
-			let Contacts = Application('Contacts');
-			Contacts.includeStandardAdditions = true;
-
-			let groups = Contacts.groups.whose({ name: '${groupName}'});
-			if (groups.length === 0 || groups === undefined || groups === null)
-			 	throw new Error('${GROUP_NOT_DEFINED_ERROR}');
-
-			groups[0].people.length;
-		`;
-
-		return new Promise((resolve, reject) => {
-			// Start JXA Script
-			const osascript = spawn('osascript', ['-l', 'JavaScript', '-e', JXA_SCRIPT]);
-			
-			// Handle JXA Script output (number of contacts in list)
-			osascript.stdout.on('data', (data: number) => {
-				resolve(data)
-			});
-	
-			osascript.stderr.on('data', (data: Buffer) => {
-				const errorMsg = data.toString('utf-8');
-
-				if (errorMsg.includes(GROUP_NOT_DEFINED_ERROR)) {
-					console.error(`Group "${groupName}" not found in Contacts app - JXA Script Error: ${errorMsg} `);
-					reject(new Error(GROUP_NOT_DEFINED_ERROR));
-					new Notice(`Error: Group "${groupName}" not found in Contacts app.`);
-					return;
-				}
-
-				new Notice(`Error retrieving contacts: \n${data}`);
-			});
-		});
-	}
-
-	getVCardStringsFromContactsApp(): Promise<VCardObject[]> {
-		const groupName = this.settings.contactsGroup;
-		const GROUP_NOT_DEFINED_ERROR = "GROUP NOT DEFINED";
-		const JXA_SCRIPT = `
-			ObjC.import('Foundation');
-			const stdout = $.NSFileHandle.fileHandleWithStandardOutput;
-
-			let Contacts = Application('Contacts');
-			Contacts.includeStandardAdditions = true;
-
-			let groups = Contacts.groups.whose({ name: '${groupName}'});
-			if (groups.length === 0 || groups === undefined || groups === null)
-			 	throw new Error('${GROUP_NOT_DEFINED_ERROR}');
-
-			for (let vcard of groups[0].people.vcard()) {
-				// Write to stdout
-				const nsString = $.NSString.alloc.initWithUTF8String(vcard);
-				const data = nsString.dataUsingEncoding($.NSUTF8StringEncoding);
-				stdout.writeData(data);
-			}
-		`;
-
-		return new Promise<VCardObject[]>((resolve, reject) => {
-			let vCardStrBuffer = "";
-			const vCards: VCardObject[]= [];
-			// Start JXA Script
-			const osascript = spawn('osascript', ['-l', 'JavaScript', '-e', JXA_SCRIPT]);
-			
-			// Handle JXA Script output (vCard strings)
-			osascript.stdout.on('data', (data: Buffer) => {
-				vCardStrBuffer += data.toString('utf-8');
-				// Check if vCard is complete
-				const regex = /BEGIN:VCARD[\s\S]*?END:VCARD/g;
-				const matches = vCardStrBuffer.match(regex);
-				for (let match of matches ?? []) {
-					const card = new vCard().parse(match);
-					const vCardObj = new VCardObject(card);
-					vCards.push(vCardObj);
-				}
-				vCardStrBuffer = vCardStrBuffer.replace(regex, "");
-			});
-			
-			osascript.on('close', (code: any) => {
-				if ((vCardStrBuffer = vCardStrBuffer.trim()).length > 0) {
-					console.error(`JXA Script Error: Possibly Incomplete vCard: ${vCardStrBuffer}`);
-					console.debug(`Leftover vCardBuffer Length: ${vCardStrBuffer.length}`);
-				}
-				console.debug(vCards)
-				resolve(vCards);
-			});
-	
-			osascript.stderr.on('data', (data: Buffer) => {
-				const errorMsg = data.toString('utf-8');
-
-				if (errorMsg.includes(GROUP_NOT_DEFINED_ERROR)) {
-					console.error(`Group "${groupName}" not found in Contacts app - JXA Script Error: ${errorMsg} `);
-					reject(new Error(GROUP_NOT_DEFINED_ERROR));
-					new Notice(`Error: Group "${groupName}" not found in Contacts app.`);
-					return;
-				}
-
-				new Notice(`Error retrieving contacts: \n${data}`);
-			});
-		});
 	}
 }
