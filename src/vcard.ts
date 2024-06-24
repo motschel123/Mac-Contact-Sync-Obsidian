@@ -230,7 +230,7 @@ export default class VCard {
 		let organization: string | undefined = undefined;
 		
 		if (org) {
-			organization = org.valueOf().replace(';', ', ')
+			organization = org.valueOf().replace(';', ', ').replace(/\\,/g, ',')
 		}
 		return organization;
 	}

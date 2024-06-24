@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-sync-contacts-macos",
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"description": "Sync your contacts from macOS to your Obsidian Vault.",
 	"main": "main.js",
 	"scripts": {
