@@ -10,7 +10,7 @@
 
 <p align="center">
 This plugin provides a function to sync your contacts from your Mac's Contacts App into a folder in your Obsidian vault.
-<\p>
+</p>
 	
 ## Features
 
