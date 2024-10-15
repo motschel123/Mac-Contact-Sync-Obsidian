@@ -1,4 +1,4 @@
-import VCard from "../src/vcard";
+import VCard from "../src/VCard";
 
 const vcf = require("vcf");
 

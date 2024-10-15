@@ -1,5 +1,5 @@
-import VCard from './vcard';
-import { IOsaScriptService, OsaScriptService } from './osascriptService';
+import VCard from '../VCard';
+import { IOsaScriptService, OsaScriptService } from './OsascriptService';
 
 const vcf = require('vcf');
 
@@ -7,7 +7,7 @@ export interface IContactsService {
     readonly groupName: string;
     readonly enabledContactFields: string;
 
-    loadContacts(): Promise<Map<string, string>>;
+    loadContactData_Markdown(): Promise<Map<string, string>>;
     getNumberOfContacts(): Promise<number>;
     getVCards(): Promise<VCard[]>;
 }
@@ -27,19 +27,23 @@ export class ContactsService implements IContactsService {
     }
 
 
-    async loadContacts(): Promise<Map<string, string>> {
-        let vCards: VCard[] = await this.getVCards();
-		// Filter out vCards without names
-		vCards = vCards.filter((vcard) => {
-			return vcard.fn != undefined;
-		});
+    async loadContactData_Markdown(): Promise<Map<string, string>> {
+    	let vCards: VCard[] = await this.getVCards();
+			// Filter out vCards without names
+			vCards = vCards.filter((vcard) => {
+				return vcard.fn != undefined;
+			});
 
-		const filenameToMarkdown = new Map<string, string>();
-		for (let vcard of vCards) {
-			filenameToMarkdown.set(vcard.getFilename(), vcard.toMarkdown(this.enabledContactFields));
-		}
-		return filenameToMarkdown;
+			const filenameToMarkdown = new Map<string, string>();
+			for (let vcard of vCards) {
+				filenameToMarkdown.set(vcard.getFilename(), vcard.toMarkdown(this.enabledContactFields));
+			}
+			return filenameToMarkdown;
     }
+
+		// async loadContactData(): Promise<Map<string, string>> {
+		// 	return new Map<string, string>();
+		// }
 
     async getNumberOfContacts(): Promise<number> {
         const JXA_SCRIPT = `

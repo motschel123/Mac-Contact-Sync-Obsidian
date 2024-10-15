@@ -1,7 +1,7 @@
 // __tests__/contactsService.test.ts
 
-import { IOsaScriptService } from '../src/osascriptService';
-import { IContactsService, ContactsService } from '../src/contactsService';
+import { IOsaScriptService } from '../src/services/OsascriptService';
+import { IContactsService, ContactsService } from '../src/services/ContactsService';
 import { TEST_VCARD_DATA } from './testVCards';
 
 const vcf = require('vcf');
