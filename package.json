@@ -13,6 +13,7 @@
 	"author": "",
 	"license": "AGPL-3.0-only",
 	"devDependencies": {
+		"@popperjs/core": "^2.11.8",
 		"@types/jest": "^29.5.12",
 		"@types/node": "^16.11.6",
 		"@typescript-eslint/eslint-plugin": "5.29.0",

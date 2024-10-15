@@ -2,6 +2,7 @@ import { App, Notice, Platform, Plugin, PluginSettingTab, Setting, TFile, TFolde
 import VCard from './vcard';
 import { IContactsService, ContactsService } from './contactsService';
 import { ContentSeperator, FileService, IFileService } from './fileService';
+import { FolderSuggest } from './suggersters/folderSuggester';
 
 interface ContactsPluginSettings {
 	contactsGroup: string;
@@ -29,13 +30,15 @@ class SettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Contacts folder')
 			.setDesc('Select the folder in which your contacts will stored')
-			.addText(text => text
-				.setPlaceholder('Contacts')
-				.setValue(this.plugin.settings.contactsFolder)
-				.onChange(async (value) => {
-					this.plugin.settings.contactsFolder = value;
-					await this.plugin.saveSettings();
-				}));
+			.addSearch((searchQuery) => {
+				new FolderSuggest(searchQuery.inputEl)
+				searchQuery.setPlaceholder('Select a folder')
+						.setValue(this.plugin.settings.contactsFolder)
+						.onChange(async (newFolder) => {
+							this.plugin.settings.contactsFolder = newFolder;
+							await this.plugin.saveSettings();
+						});
+		});
 		
 		new Setting(containerEl)
 			.setName('Contacts group')
