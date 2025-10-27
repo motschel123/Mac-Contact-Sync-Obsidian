@@ -1,7 +1,7 @@
 import { PluginSettingTab, App, Setting } from "obsidian";
 import ContactsPlugin from "./main";
 import { FolderSuggest } from "./suggesters/FolderSuggester";
-import VCard from "./VCard";
+import VCard from "./vcard";
 
 export const DEFAULT_SETTINGS: ContactsPluginSettings = {
 	contactsGroup: 'Obsidian',
@@ -40,7 +40,7 @@ export class ContactsSettingTab extends PluginSettingTab {
 			.setName('Contacts folder')
 			.setDesc('Select the folder in which your contacts will stored')
 			.addSearch((searchQuery) => {
-				new FolderSuggest(searchQuery.inputEl)
+				new FolderSuggest(this.app, searchQuery.inputEl)
 				searchQuery.setPlaceholder('Select a folder')
 						.setValue(this.plugin.settings.contactsFolder)
 						.onChange(async (newFolder) => {
