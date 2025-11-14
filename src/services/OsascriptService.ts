@@ -1,10 +1,35 @@
+import { Readable } from 'stream';
+
 const { spawn } = require('child_process');
 
-export interface IOsaScriptService {
-    executeScript(JXA_script: string): Promise<string>;
-}
+const SPAWN_OPTS = {
+    stdio: ['ignore', 'pipe', 'inherit']
+};
 
-export class OsaScriptService implements IOsaScriptService {
+export class OsaScriptService {
+    executeScriptStream(JXA_script: string): Readable {
+        const osascript = spawn('osascript', ['-l', 'JavaScript', '-e', JXA_script], SPAWN_OPTS);
+        if (!osascript.stdout) {
+            throw new Error('Failed to start osascript process');
+        }
+
+        const out: Readable = osascript.stdout;
+        out.setEncoding('utf-8');
+        
+        osascript.on('error', (err: Error) => {
+            console.error('error executing JXA script:', err);
+        });
+
+        osascript.on("close", (code: number, signal: string) => {
+            if (code && code !== 0) {
+                console.error(`osascript process exited with code ${code} and signal ${signal}`);
+                console.debug(`JXA Script:\n${JXA_script}`);
+            }
+        });
+
+        return out;
+    }
+
     async executeScript(JXA_script: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             // Start JXA Script
