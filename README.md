@@ -25,7 +25,8 @@ A Plugin to synchronize Obsidian with contact data from your Mac's Contacts Appl
 
 1. Install the plugin
 2. Create the specified ´Smart List´ in the your Contacts App (See [Creating a Smart List](#creating-a-smart-list))
-3. Configure the Plugin Settings:
+3. Disable 'Export photos in vcard' by going to the settings of your Contacts App.
+4. Configure the Plugin Settings:
    - Set the name of your created Smart List
    - Select a folder for the created Notes
    - Configure a custom template (See [Templates](#templates))
@@ -67,5 +68,6 @@ Everything after this will not be replaces when re-running the command.
 
 
 ## Notes
-- In order to communicate with the Contacts app this plugin runs an AppleScript: when asked for permission, **allow Obsidian to access the Contacts app or this Plugin won't work.** 
+- In order to communicate with the Contacts app this plugin runs an AppleScript: when asked for permission, **allow Obsidian to access the Contacts app or this Plugin won't work.**
+- If you experience issues with the sychronization of contacts please make sure you have disabled 'export photos in vcard' in your Contacts App before creating an Issue.
 - This plugin is not affiliated with Apple in any way.
