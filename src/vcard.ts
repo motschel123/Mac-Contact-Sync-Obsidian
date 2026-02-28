@@ -105,7 +105,7 @@ export default class VCard {
 						default:
 					}
 	
-					return `- ${emotes} [${tel}](tel:${tel.replace(' ', '')})\n`
+					return `- ${emotes} [${tel}](tel:${tel.replace(/\s/g, '')})\n`
 				}).join('');
 			case 'addresses':
 				return this.addresses?.map(([type, adr]) => {
