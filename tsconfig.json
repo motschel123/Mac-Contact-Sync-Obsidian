@@ -1,10 +1,12 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "paths": {
+      "src/*": ["./src/*"]
+    },
     "inlineSourceMap": true,
     "inlineSources": true,
     "module": "ESNext",
-    "target": "ES6",
+    "target": "es2018",
     "allowJs": true,
     "noImplicitAny": true,
     "moduleResolution": "node",
@@ -17,7 +19,9 @@
       "ES5",
       "ES6",
       "ES7"
-    ]
+    ],
+    "types": ["jest"],
+    "ignoreDeprecations": "6.0"
   },
   "include": [
     "**/*.ts"
