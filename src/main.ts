@@ -3,7 +3,7 @@ import { ContactsPluginSettings, ContactsSettingTab, DEFAULT_SETTINGS } from './
 import { SyncContacts } from './commands/SyncContacts';
 
 export default class ContactsPlugin extends Plugin {
-	settings: ContactsPluginSettings;
+	settings!: ContactsPluginSettings;
 
 	async onload() {
 		await this.loadSettings();

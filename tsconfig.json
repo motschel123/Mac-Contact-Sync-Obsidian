@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
-      "src/*": ["src/*"]
+      "src/*": ["./src/*"]
     },
     "inlineSourceMap": true,
     "inlineSources": true,
@@ -20,7 +19,9 @@
       "ES5",
       "ES6",
       "ES7"
-    ]
+    ],
+    "types": ["jest"],
+    "ignoreDeprecations": "6.0"
   },
   "include": [
     "**/*.ts"
