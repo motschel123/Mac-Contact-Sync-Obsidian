@@ -1,10 +1,7 @@
-import VCard from '../vcard';
 import { OsaScriptService } from './OsascriptService';
 import { Readable, Transform } from 'stream';
 import { ContactModel } from 'src/models/ContactModel';
 import { VCardPhotoRegex } from 'src/consts';
-
-const vcf = require('vcf');
 
 export class ContactsService {
 	readonly osaScriptService: OsaScriptService;
@@ -72,7 +69,7 @@ $.NSThread.sleepForTimeInterval(1);`;
 		const vCardRegex = /^BEGIN:VCARD[\s\S]*END:VCARD$/sm;
 		const checkValidVCard = new Transform({
 			objectMode: true,
-			transform(chunk: string, _enc, callback) {
+			transform(chunk: any, _enc: BufferEncoding, callback: (err?: Error | null) => void) {
 				if (vCardRegex.test(chunk)) {
 					let contact = ContactModel.fromVCardString(chunk);
 					this.push(contact);

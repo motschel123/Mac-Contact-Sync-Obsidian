@@ -1,9 +1,8 @@
 import { Readable } from 'stream';
+import { spawn, type SpawnOptions } from 'child_process';
 
-const { spawn } = require('child_process');
-
-const SPAWN_OPTS = {
-    stdio: ['ignore', 'pipe', 'inherit']
+const SPAWN_OPTS: SpawnOptions = {
+    stdio: ['ignore', 'pipe', 'inherit'] as any
 };
 
 export class OsaScriptService {

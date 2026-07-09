@@ -1,7 +1,12 @@
-const vcf = require('vcf');
+import vcf from 'vcf';
+
+type VCardInstance = InstanceType<typeof vcf>;
+type VCardProperty = vcf.Property;
+type VCardPropertyWithType = VCardProperty & { type?: string | string[] };
+type VCardPropertyValue = VCardProperty | VCardProperty[] | undefined;
 
 export default class VCard {
-	version: string;
+	version: string = '';
 
 	fn?: string;
 	nickname?: string;
@@ -17,21 +22,20 @@ export default class VCard {
 	xabuid?: string;
 
 	constructor(
-		card: typeof vcf
+		card: VCardInstance
 	) {
-		this.version = card.version;
-		this.fn = card.get("fn")?.valueOf().replace(/\\,/g, ',');
-		
-		this.nickname = card.get("nickname")?.valueOf() ?? undefined;
-		this.organization = this.parseOrganization(card.get("org"));
-		this.title = card.get("title")?.valueOf() ?? undefined;
-		this.telephones = this.parseTelephones(card.get("tel"));
-		this.addresses = this.parseAddresses(card.get("adr"));
-		this.emails = this.parseEmails(card.get("email"));
-		this.birthdate = this.parseBirthdate(card.get("bday"));
-		this.URLs = this.parseURLs(card.get("url"));
-		this.notes = this.parseNotes(card.get("note"));
-	    this.xabuid = this.parseXAbuid(card.get("xAbuid"));
+		this.version = card.version ?? '';
+		this.fn = this.getSingleValue(card.get('fn'))?.replace(/\\,/g, ',');
+		this.nickname = this.getSingleValue(card.get('nickname'));
+		this.organization = this.parseOrganization(card.get('org'));
+		this.title = this.getSingleValue(card.get('title'));
+		this.telephones = this.parseTelephones(card.get('tel'));
+		this.addresses = this.parseAddresses(card.get('adr'));
+		this.emails = this.parseEmails(card.get('email'));
+		this.birthdate = this.parseBirthdate(card.get('bday'));
+		this.URLs = this.parseURLs(card.get('url'));
+		this.notes = this.parseNotes(card.get('note'));
+		this.xabuid = this.parseXAbuid(card.get('xAbuid'));
 		//this.photo = card.get("photo")?.valueOf() ?? undefined;
 		
 		// Inform user of vCard without name
@@ -57,7 +61,8 @@ export default class VCard {
 	}
 
 	private fieldToMarkdown(field: string): string | undefined {
-		if (typeof (this as any)[field] === 'undefined') return undefined;
+		const value = (this as Record<string, unknown>)[field];
+		if (typeof value === 'undefined') return undefined;
 
 		switch (field) {
 			case 'nickname':
@@ -132,74 +137,77 @@ export default class VCard {
 		}
 	}
 
-	private parseBirthdate(bday: typeof vcf.Property): Date | undefined {
+	private getSingleValue(property: VCardPropertyValue): string | undefined {
+		if (!property) return undefined;
+		const singleProperty = Array.isArray(property) ? property[0] : property;
+		const value = singleProperty?.valueOf();
+		return typeof value === 'string' ? value : undefined;
+	}
+
+	private getProperties(property: VCardPropertyValue): VCardProperty[] {
+		if (!property) return [];
+		return Array.isArray(property) ? property : [property];
+	}
+
+	private parseBirthdate(bday: VCardPropertyValue): Date | undefined {
 		let birthdate: Date | undefined = undefined;
 		
 		if (bday) {
-			birthdate = new Date(Date.parse(bday.valueOf()));
+			birthdate = new Date(Date.parse(this.getSingleValue(bday) ?? ''));
 		}
 		return birthdate;
 	}
 
-	private parseURLs(URLs: typeof vcf.Property): Array<string> | undefined {
+	private parseURLs(URLs: VCardPropertyValue): Array<string> | undefined {
 		let links: Array<string> | undefined = undefined;
 		
 		if (URLs) {
 			links = new Array<string>();
 
-			if (!Array.isArray(URLs)) {
-				URLs = [URLs];
-			}
-			for (let url of URLs) {
+			for (let url of this.getProperties(URLs)) {
 				links.push(url.valueOf());
 			}
 		}
 		return links;
 	}
 
-	private parseNotes(notes: typeof vcf.Property): string | undefined {
+	private parseNotes(notes: VCardPropertyValue): string | undefined {
 		let notesString: string | undefined = undefined;
 		
 		if (notes) {
-			notesString = notes.valueOf()?.split('\\n').map((line: string) => line.endsWith('\\') ? line.slice(0, line.length-2) : line).join('\n\t');
+			notesString = this.getSingleValue(notes)?.split('\\n').map((line: string) => line.endsWith('\\') ? line.slice(0, line.length-2) : line).join('\n\t');
 		}
 		return notesString;
 	}
 
-	private parseXAbuid(xabuid: typeof vcf.Property): string | undefined {
+	private parseXAbuid(xabuid: VCardPropertyValue): string | undefined {
 		let xabuidString: string | undefined = undefined;
 		
 		if (xabuid) {
-			xabuidString = xabuid.valueOf();
+			xabuidString = this.getSingleValue(xabuid);
 		}
 		return xabuidString;
 	}
 
-	private parseEmails(email: typeof vcf.Property): Array<string> | undefined {
+	private parseEmails(email: VCardPropertyValue): Array<string> | undefined {
 		let emails: Array<string> | undefined = undefined;
 		
 		if (email) {
 			emails = new Array<string>();
-			if (!Array.isArray(email)) {
-				email = [email];
-			}
-			for (let mail of email) {
+			for (let mail of this.getProperties(email)) {
 				emails.push(mail.valueOf());
 			}
 		}
 		return emails;
 	}
 
-	private parseAddresses(adr: typeof vcf.Property): Array<[string, string]> | undefined {
+	private parseAddresses(adr: VCardPropertyValue): Array<[string, string]> | undefined {
 		let addresses: Array<[string, string]> | undefined = undefined;
 		
 		if (adr) {
 			addresses = new Array<[string, string]>();
-			if (!Array.isArray(adr)) {
-				adr = [adr];
-			}
-			for (let address of adr) {
-				let type;
+			for (let address of this.getProperties(adr) as VCardPropertyWithType[]) {
+				let type = 'home';
 				if (typeof address.type == 'string') 
 					type = address.type?.toLowerCase() ?? 'home';
 				else if (Array.isArray(address.type))
@@ -210,15 +218,12 @@ export default class VCard {
 		return addresses;
 	}
 
-	private parseTelephones(tel: typeof vcf.Property): Array<[string, string]> | undefined {
+	private parseTelephones(tel: VCardPropertyValue): Array<[string, string]> | undefined {
 		let telephones: Array<[string, string]> | undefined = undefined;
 		
 		if (tel) {
 			telephones = new Array<[string, string]>();
-			if (!Array.isArray(tel)) {
-				tel = [tel];
-			}
-			for (let telephone of tel) {
+			for (let telephone of this.getProperties(tel) as VCardPropertyWithType[]) {
 				let type = (telephone.type?.[0]?.toLowerCase() ?? 'phone') + ',' + (telephone.type?.[1]?.toLowerCase() ?? 'voice');
 				telephones.push([type, telephone.valueOf()]);
 			}
@@ -226,17 +231,17 @@ export default class VCard {
 		return telephones;
 	}
 
-	private parseOrganization(org: typeof vcf.Property): string | undefined {
+	private parseOrganization(org: VCardPropertyValue): string | undefined {
 		let organization: string | undefined = undefined;
 		
 		if (org) {
-			organization = org.valueOf().replace(';', ', ').replace(/\\,/g, ',')
+			organization = this.getSingleValue(org)?.replace(';', ', ').replace(/\\,/g, ',')
 		}
 		return organization;
 	}
 
 	static getVCardFields(): Array<string> {
-		const JSON_VCARD = ["vcard",[["version",{},"text","4.0"], ["fn",{},"text","name"]]];
+		const JSON_VCARD: Parameters<typeof vcf.fromJSON>[0] = ["vcard",[["version",{},"text","4.0"], ["fn",{},"text","name"]]];
 		const inst = new VCard(vcf.fromJSON(JSON_VCARD));
 		return inst.getVCardFields();
 	}
